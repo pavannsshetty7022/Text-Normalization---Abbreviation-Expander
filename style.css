@@ -1,5 +1,5 @@
 :root {
-    /* Light Theme Variables */
+
     --bg-start: #FFFFFF;
     --bg-middle: #F5F5F5;
     --bg-end: #E0E0E0;
@@ -29,7 +29,7 @@
 }
 
 .dark {
-    /* Dark Theme Variables */
+   
     --bg-start: #000000;
     --bg-middle: #1A1A1A;
     --bg-end: #333333;
@@ -97,7 +97,7 @@ body {
 .toggle-bg { background-color: var(--toggle-bg); }
 .toggle-handle-color { background-color: var(--toggle-handle-color); }
 
-/* Scrollbar styles */
+
 ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -114,7 +114,7 @@ body {
     background: var(--scrollbar-thumb-hover);
 }
 
-/* Other UI components */
+
 .ripple {
     position: relative;
     overflow: hidden;
