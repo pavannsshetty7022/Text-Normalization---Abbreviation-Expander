@@ -9,7 +9,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-API_KEY = "AIzaSyBkR5-y6E2TG0oxyEzg8D6r-QZw9aJM5Y8"
+API_KEY = ""
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent"
 
 with open("abbreviations.json", "r") as f:
