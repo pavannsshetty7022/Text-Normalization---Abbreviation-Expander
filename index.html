@@ -1,116 +1,182 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light">
 <head>
-  <meta charset="UTF-8">
-  <title>Abbrevify - Start</title>
-
-<link rel="icon" href="sourceforge-icon.png" type="image/png">
-      <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='12' fill='%232563eb'/%3E%3Cpath d='M7 17L12 7L17 17H15L13.5 12.5L12 10.5L10.5 17H9L7 17Z' fill='white'/%3E%3C/svg%3E" type="image/svg+xml">
-
-  
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: 'Inter', sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #fdfbfb, #ebedee);
-    }
-
-    .container {
-      text-align: center;
-      padding: 2rem;
-      border-radius: 20px;
-      background: white;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-      max-width: 400px;
-      width: 90%;
-    }
-
-    .icon-img {
-      width: 100px;
-      height: auto;
-      margin-bottom: 1.2rem;
-      animation: bounce 2s infinite;
-    }
-
-    @keyframes bounce {
-      0%, 100% {
-        transform: translateY(0);
-      }
-      50% {
-        transform: translateY(-10px);
-      }
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      color: #333;
-      margin-bottom: 0.5rem;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: #666;
-      margin-bottom: 2rem;
-    }
-
-    button {
-      background-color: #000000;
-      color: white;
-      padding: 12px 30px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #3b3838;
-      transform: translateY(-2px);
-    }
-
-    @media (max-width: 480px) {
-      h1 {
-        font-size: 2rem;
-      }
-      .subtitle {
-        font-size: 1rem;
-      }
-      .icon-img {
-        width: 80px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abbrevify: SMS Abbreviation Converter</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='24' height='24' rx='12' fill='%232563eb'/%3E%3Cpath d='M7 17L12 7L17 17H15L13.5 12.5L12 10.5L10.5 17H9L7 17Z' fill='white'/%3E%3C/svg%3E" type="image/svg+xml">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Space Mono', 'monospace'],
+                    },
+                    colors: {
+                        'light-bg-start': '#FFFFFF',
+                        'light-bg-middle': '#F5F5F5',
+                        'light-bg-end': '#E0E0E0',
+                        'light-panel': '#FFFFFF',
+                        'light-input-bg': '#FFFFFF',
+                        'light-text-primary': '#222222',
+                        'light-text-secondary': '#666666',
+                        'light-border': '#BBBBBB',
+                        'light-btn-primary-start': '#000000',
+                        'light-btn-primary-end': '#000000',
+                        'light-btn-primary-hover-start': '#333333',
+                        'light-btn-primary-hover-end': '#333333',
+                        'light-toggle-bg': '#DDDDDD',
+                        'light-toggle-handle': '#000000',
+                        'dark-bg-start': '#000000',
+                        'dark-bg-middle': '#1A1A1A',
+                        'dark-bg-end': '#333333',
+                        'dark-panel': '#000000',
+                        'dark-input-bg': '#1A1A1A',
+                        'dark-text-primary': '#FFFFFF',
+                        'dark-text-secondary': '#AAAAAA',
+                        'dark-border': '#555555',
+                        'dark-btn-primary-start': '#FFFFFF',
+                        'dark-btn-primary-end': '#FFFFFF',
+                        'dark-btn-primary-hover-start': '#DDDDDD',
+                        'dark-btn-primary-hover-end': '#DDDDDD',
+                        'dark-toggle-bg': '#444444',
+                        'dark-toggle-handle': '#FFFFFF',
+                    },
+                    boxShadow: {
+                        'panel': '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Space+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-
-  <div class="container">
-    
-    <img src="sourceforge-icon.png" alt="SourceForge Icon" class="icon-img" />
-    
-    <h1>Abbrevify</h1>
-    <p class="subtitle">Abbreviation Converter made easy 🚀</p>
-    
-    <button onclick="startApp()">Get Started</button>
-  </div>
-
-  <script>
-    function startApp() {
-      window.location.href = 'main.html'; 
-    }
-  </script>
-
+<body class="font-sans antialiased bg-gradient-to-br transition-colors duration-300 flex items-center justify-center min-h-screen p-4">
+    <div id="app" class="w-full max-w-4xl panel-bg rounded-xl shadow-panel border border-color overflow-hidden flex flex-col transition-colors duration-300">
+        <header class="flex items-center justify-between p-4 panel-bg dark:bg-dark-panel border-b border-color">
+            <div class="flex items-center space-x-3">
+                <button id="sidebar-toggle-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-secondary ripple" title="Menu">
+                    <i class="bi bi-list text-2xl"></i>
+                </button>
+            </div>
+            <div class="flex-1 flex flex-col justify-center items-center">
+                <div class="flex items-center">
+                    <svg id="abbrevify-logo" class="w-8 h-8 rounded-full mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="24" height="24" rx="12" fill="#2563eb"/>
+                        <path d="M7 17L12 7L17 17H15L13.5 12.5L12 10.5L10.5 17H9L7 17Z" fill="white"/>
+                    </svg>
+                    <h1 class="text-2xl font-bold text-primary">Abbrevify</h1>
+                </div>
+                <p class="text-sm text-secondary mt-1">SMS Abbreviation Converter & Grammar Checker</p>
+            </div>
+            <div class="w-16 flex justify-end">
+                <button id="theme-toggle-btn" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 text-secondary ripple" title="Toggle theme">
+                    <i id="theme-toggle-icon" class="bi bi-moon-fill text-xl"></i>
+                </button>
+            </div>
+        </header>
+        <div class="flex-grow p-6 space-y-6">
+            <div class="flex justify-center items-center gap-4 flex-wrap">
+                <button id="mode-sms-to-full" class="mode-button">SMS to Full</button>
+                <button id="mode-full-to-sms" class="mode-button">Full to SMS</button>
+            </div>
+            <div class="relative">
+                <label for="input-text" class="block text-sm font-medium text-secondary mb-2" id="input-label">Enter SMS abbreviation:</label>
+                <textarea
+                    id="input-text"
+                    class="w-full p-4 pr-12 border border-color rounded-lg input-bg text-primary resize-y outline-none focus:ring-2 focus:ring-light-toggle-handle dark:focus:ring-dark-toggle-handle"
+                    rows="6"
+                    placeholder="e.g., wt 2 4 u, l8r, ttyl"
+                    style="min-height: 120px;"
+                ></textarea>
+                <button id="clear-input-btn" class="absolute top-10 right-3 p-2 rounded-md bg-gray-200 hover:bg-gray-300 text-secondary transition-colors duration-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300" title="Clear input">
+                    <i class="bi bi-x-circle"></i>
+                </button>
+            </div>
+            <div class="flex justify-center gap-4 flex-wrap">
+                <button id="convert-btn" class="flex items-center px-8 py-3 rounded-lg shadow-2xl ripple font-semibold text-lg transition-all duration-200 hover:scale-105 transform btn-primary">
+                    <span id="convert-button-text">Convert</span>
+                </button>
+                <button id="grammar-check-btn" class="flex items-center px-6 py-3 rounded-lg shadow-2xl ripple font-semibold text-lg transition-all duration-200 hover:scale-105 transform btn-primary">
+                    Grammar Check
+                </button>
+            </div>
+            <div class="relative">
+                <label for="output-text" class="block text-sm font-medium text-secondary mb-2">Converted Text:</label>
+                <textarea
+                    id="output-text"
+                    class="w-full p-4 pr-12 border border-color rounded-lg bg-gray-50 text-primary resize-y outline-none cursor-not-allowed dark:bg-gray-700 dark:text-primary"
+                    rows="6"
+                    readonly
+                    placeholder="Your converted text will appear here."
+                    style="min-height: 120px;"
+                ></textarea>
+                <button id="copy-output-btn" class="absolute top-10 right-3 p-2 rounded-md bg-gray-200 hover:bg-gray-300 text-secondary transition-colors duration-200 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 ripple" title="Copy to clipboard">
+                    <i class="bi bi-clipboard"></i>
+                </button>
+            </div>
+        </div>
+        <footer class="p-4 border-t border-color text-center text-xs text-secondary flex flex-col items-center">
+            Abbrevify. Convert your messages with ease.
+            <div class="flex space-x-4 mt-2">
+                <a href="https://github.com/yourprofile" target="_blank" class="text-secondary hover:text-light-btn-primary-start dark:hover:text-dark-btn-primary-start transition-colors" aria-label="GitHub Profile">
+                    <i class="bi bi-github text-xl"></i>
+                </a>
+                <a href="https://linkedin.com/in/pavannsshetty7022" target="_blank" class="text-secondary hover:text-light-btn-primary-start dark:hover:text-dark-btn-primary-start transition-colors" aria-label="LinkedIn Profile">
+                    <i class="bi bi-linkedin text-xl"></i>
+                </a>
+                <a href="https://twitter.com/yourprofile" target="_blank" class="text-secondary hover:text-light-btn-primary-start dark:hover:text-dark-btn-primary-start transition-colors" aria-label="Twitter Profile">
+                    <i class="bi bi-twitter-x text-xl"></i>
+                </a>
+                <a href="mailto:shettypavan524@gmail.com" class="text-secondary hover:text-light-btn-primary-start dark:hover:text-dark-btn-primary-start transition-colors" aria-label="Email Address">
+                    <i class="bi bi-envelope-fill text-xl"></i>
+                </a>
+            </div>
+        </footer>
+        <div id="modal-overlay" class="fixed inset-0 flex items-center justify-center z-50 hidden" style="background-color: rgba(0, 0, 0, 0.75);">
+            <div class="panel-bg p-8 rounded-lg shadow-lg w-full max-w-md relative text-primary">
+                <button id="close-modal" class="absolute top-4 right-4 text-secondary hover:text-primary" aria-label="Close modal">
+                    <i class="bi bi-x-lg w-6 h-6"></i>
+                </button>
+                <h2 class="text-xl font-bold mb-4" id="modal-title"></h2>
+                <div id="modal-content"></div>
+            </div>
+        </div>
+    </div>
+    <div id="sidebar-overlay" class="fixed inset-0 z-40 bg-transparent hidden" ></div>
+    <div id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-light-panel dark:bg-dark-panel shadow-lg z-50 transform -translate-x-full transition-colors duration-300">
+        <div class="flex justify-between items-center p-4 border-b border-color">
+            <h2 class="text-xl font-bold text-primary ">Menu</h2>
+            <button id="close-sidebar-btn" class="p-2 rounded-full hover:bg-gray-100 text-secondary ripple" title="Close Menu">
+                <i class="bi bi-x-lg text-2xl"></i>
+            </button>
+        </div>
+        <nav class="p-4 space-y-2">
+            <button id="sidebar-custom-abbreviations-btn" class="sidebar-item text-primary">
+                <i class="bi bi-journal-text text-1xl mr-3"></i> Custom Abbreviations
+            </button>
+            <button id="sidebar-usage-statistics-btn" class="sidebar-item text-primary">
+                <i class="bi bi-graph-up-arrow text-1xl mr-3"></i> Usage Statistics
+            </button>
+            <button id="sidebar-history-btn" class="sidebar-item text-primary">
+                <i class="bi bi-clock-history text-1xl mr-3"></i> Converted History
+            </button>
+            <button id="sidebar-account-btn" class="sidebar-item text-primary">
+                <i class="bi bi-person-circle text-1xl mr-3"></i> Account
+            </button>
+            <button id="sidebar-feedback-btn" class="sidebar-item text-primary">
+                <i class="bi bi-chat-left-text text-1xl mr-3"></i> Give Feedback
+            </button>
+            <button id="sidebar-about-btn" class="sidebar-item text-primary">
+                <i class="bi bi-info-circle text-1xl mr-3"></i> About
+            </button>
+        </nav>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
