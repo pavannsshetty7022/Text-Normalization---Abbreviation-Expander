@@ -1,4 +1,4 @@
-# Text Abbreviation Normalizer
+# Text Normalization & Abbreviation Expander
 
 Convert casual chat/SMS abbreviations into full, readable text—like converting `gn` to *good night*, `n8` to *night*, `mrng` to *morning*, and more.
 
