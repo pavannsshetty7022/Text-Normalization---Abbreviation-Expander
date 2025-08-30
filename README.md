@@ -22,6 +22,8 @@ Convert casual chat/SMS abbreviations into full, readable text—like converting
 - **JavaScript** – For interactive behavior  
 - **Python** – Backend logic and text normalization (via Flask or script)  
 - **JSON** – To store abbreviation mappings and data
+- **Bootstrap** – For icons
+- **Tailwind CSS** – For templete and components
 
 
 ## Overview
