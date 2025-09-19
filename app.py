@@ -143,6 +143,35 @@ def grammar_check_feedback(text):
 
     return feedback_messages
 
+def plagiarism_check_feedback(text):
+    """Check for plagiarism using Gemini and return a percentage."""
+    prompt = (
+        f"Analyze the following text for plagiarism. "
+        f"Estimate the percentage of the text that is likely plagiarized (0-100%). "
+        f"Return your answer in JSON format as: {{'percentage': <number>, 'explanation': <string>}}. "
+        f"Text: '{text}'"
+    )
+
+    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
+    result = call_gemini_api_with_retry(payload)
+    if not result:
+        return {'percentage': None, 'explanation': "Unable to determine plagiarism status."}
+
+    # Try to extract JSON from Gemini's output
+    import re
+    match = re.search(r'\{.*\}', result, re.DOTALL)
+    if match:
+        json_str = match.group(0)
+        try:
+            parsed = json.loads(json_str)
+            percentage = parsed.get('percentage', None)
+            explanation = parsed.get('explanation', '')
+            return {'percentage': percentage, 'explanation': explanation}
+        except Exception:
+            pass
+    # Fallback: return raw result as explanation
+    return {'percentage': None, 'explanation': result.strip()}
+
 @app.route('/')
 def home():
     return "Abbrevify API is running! 🚀"
@@ -174,6 +203,9 @@ def process_text():
         elif action == 'grammar_check':
             feedback = grammar_check_feedback(text)
             return jsonify({'feedback': feedback})
+        elif action == 'plagiarism_check':
+                result = plagiarism_check_feedback(text)
+                return jsonify(result)
 
         else:
             return jsonify({'error': f'Invalid action: {action}'}), 400

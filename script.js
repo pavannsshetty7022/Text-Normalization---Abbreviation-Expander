@@ -10,6 +10,7 @@ const closeModalBtn = document.getElementById('close-modal');
 const modalTitle = document.getElementById('modal-title');
 const modalContent = document.getElementById('modal-content');
 const grammarCheckBtn = document.getElementById('grammar-check-btn');
+const plagiarismCheckBtn = document.getElementById('plagiarism-check-btn');
 const modeSmsToFullBtn = document.getElementById('mode-sms-to-full');
 const modeFullToSmsBtn = document.getElementById('mode-full-to-sms');
 const sidebarToggleBtn = document.getElementById('sidebar-toggle-btn');
@@ -39,10 +40,14 @@ let usageStats = {
     smsToFullCount: 0,
     fullToSmsCount: 0,
     grammarCheckCount: 0,
+    plagiarismCheckCount: 0,
 };
 let currentMode = 'sms-to-full';
 grammarCheckBtn.disabled = false;
 grammarCheckBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+plagiarismCheckBtn.disabled = false;
+plagiarismCheckBtn.classList.remove('opacity-50', 'cursor-not-allowed');
 
 function openModal(title, contentHtml) {
     modalTitle.textContent = title;
@@ -165,6 +170,8 @@ function updateUsageStats(action) {
         else usageStats.fullToSmsCount++;
     } else if (action === 'grammar_check') {
         usageStats.grammarCheckCount++;
+    } else if (action === 'plagiarism_check') {
+        usageStats.plagiarismCheckCount++;
     }
     saveUsageStats();
 }
@@ -251,6 +258,59 @@ async function handleGrammarCheck() {
         grammarCheckBtn.disabled = false;
         grammarCheckBtn.classList.remove('opacity-50', 'cursor-not-allowed');
         grammarCheckBtn.textContent = 'Grammar Check';
+    }
+}
+
+async function handlePlagiarismCheck() {
+    const input = inputText.value.trim();
+    if (!input) {
+        alert("Please enter text to check for plagiarism.");
+        return;
+    }
+    plagiarismCheckBtn.disabled = true;
+    plagiarismCheckBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    plagiarismCheckBtn.textContent = 'Checking...';
+    outputText.value = "Processing...";
+    const apiUrl = 'http://127.0.0.1:5000/process_text';
+    const postData = {
+        text: input,
+        action: 'plagiarism_check',
+        mode: currentMode,
+        custom_abbreviations: customAbbreviations
+    };
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postData)
+        });
+        if (!response.ok) {
+            throw new Error('Server error');
+        }
+        const data = await response.json();
+        let displayText = "";
+        if (typeof data.percentage === 'number') {
+            displayText += `Plagiarism = ${data.percentage}%\n`;
+        }
+        if (data.explanation) {
+            let simpleDetail = data.explanation.split(/[\n\.]/).filter(Boolean).slice(0,2).join('. ') + (data.explanation.includes('.') ? '.' : '');
+            displayText += simpleDetail;
+        }
+        if (!displayText) {
+            displayText = "Unable to determine plagiarism status.";
+        }
+        outputText.value = displayText;
+        updateUsageStats('plagiarism_check');
+    } catch (error) {
+        console.error('Plagiarism check failed:', error);
+        outputText.value = "Error checking plagiarism. Please try again.";
+        alert("There was an error connecting to the server.");
+    } finally {
+        plagiarismCheckBtn.disabled = false;
+        plagiarismCheckBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        plagiarismCheckBtn.textContent = 'Plagiarism Check';
     }
 }
 
@@ -479,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     convertBtn.addEventListener('click', handleConversion);
     grammarCheckBtn.addEventListener('click', handleGrammarCheck);
+    plagiarismCheckBtn.addEventListener('click', handlePlagiarismCheck);
     copyOutputBtn.addEventListener('click', handleCopyOutput);
     clearInputBtn.addEventListener('click', handleClearInput);
     closeModalBtn.addEventListener('click', closeModal);
