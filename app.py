@@ -1,221 +1,190 @@
-import os
+import os, json, re, time, requests
 from flask import Flask, request, jsonify
-import json
-import requests
-import time
 from flask_cors import CORS
 from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 CORS(app)
-
 
 API_KEY = os.getenv("GEMINI_API_KEY")
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent"
 
-
-with open("abbreviations.json", "r") as f:
-    abbreviation_dict = json.load(f)
-
 gemini_cache = {}
 
 
-def call_gemini_api_with_retry(payload, is_structured_response=False):
-    retries = 0
-    max_retries = 3
-    base_delay = 1.0
-
-    while retries < max_retries:
-        try:
-            headers = {'Content-Type': 'application/json'}
-            url = f"{API_URL}?key={API_KEY}"
-            response = requests.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-
-            result = response.json()
-            print("Gemini raw response:", result)  # Debugging
-
-            if (result.get('candidates')
-                and result['candidates'][0].get('content')
-                and result['candidates'][0]['content'].get('parts')):
-                text_part = result['candidates'][0]['content']['parts'][0]['text']
-                if is_structured_response:
-                    return json.loads(text_part)
-                else:
-                    return text_part
-            else:
-                return None
-        except Exception as e:
-            print(f"Error in Gemini API: {e}")
-
-        retries += 1
-        delay = base_delay * (2 ** retries)
-        print(f"Retrying in {delay} seconds...")
-        time.sleep(delay)
-
+def call_gemini_api(prompt):
+    headers = {"Content-Type": "application/json"}
+    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
+    try:
+        response = requests.post(f"{API_URL}?key={API_KEY}", headers=headers, json=payload, timeout=45)
+        response.raise_for_status()
+        data = response.json()
+        if data.get("candidates"):
+            return data["candidates"][0]["content"]["parts"][0]["text"].strip()
+    except Exception as e:
+        print("Gemini API error:", e)
     return None
 
+
 def expand_abbreviations(text):
-    """Convert SMS-style text into full English using Gemini only."""
     if text in gemini_cache:
         return gemini_cache[text]
-
     prompt = (
         "You are an SMS abbreviation converter. "
         "Expand the following SMS/text message into full, normal English sentences. "
-        "Do not add explanations, just return the converted text.\n\n"
-        f"{text}"
+        "Do not add explanations, just return the converted text. "
+        "Preserve all punctuation marks (?, !, .) exactly as they are in the input. "
+        "Do not add any new punctuation. "
+        "Convert only word-by-word without adding extra words.\n\n"
+        f"Text: {text}"
     )
-
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
-    expanded_text = call_gemini_api_with_retry(payload)
-
-    if expanded_text:
-        expanded_text = expanded_text.strip()
-        gemini_cache[text] = expanded_text
-        return expanded_text
+    result = call_gemini_api(prompt)
+    if result:
+        gemini_cache[text] = result
+        return result
     return text
 
 
 def abbreviate_full_text(text):
-    """Convert full English text into SMS-style abbreviations using Gemini only."""
     if text in gemini_cache:
         return gemini_cache[text]
-
     prompt = (
         "You are an SMS abbreviation generator. "
-        "Convert the following normal English sentence into SMS-style text "
-        "using common abbreviations (like 'u' for 'you', '2' for 'to', 'brb' for 'be right back'). "
-        "Do not add explanations, just return the SMS text.\n\n"
-        f"{text}"
+        "Convert the following English sentence into SMS-style text using common abbreviations "
+        "(like 'u' for 'you', '2' for 'to', 'brb' for 'be right back'). "
+        "Do not add explanations, just return the SMS text. "
+        "Preserve all punctuation marks (?, !, .) exactly as they are in the input. "
+        "Do not add any new punctuation. "
+        "Convert only word-by-word without adding extra words.\n\n"
+        f"Text: {text}"
     )
-
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
-    sms_text = call_gemini_api_with_retry(payload)
-
-    if sms_text:
-        sms_text = sms_text.strip()
-        gemini_cache[text] = sms_text
-        return sms_text
+    result = call_gemini_api(prompt)
+    if result:
+        gemini_cache[text] = result
+        return result
     return text
 
 
 def grammar_check_feedback(text):
-    """Check grammar/spelling using Gemini structured output."""
     prompt = (
-        f"Check the grammar and spelling of the following text and provide a list of corrections. "
-        f"For each correction, list the issue, the original text, and the suggested replacement. "
-        f"Be concise and only list the issues. Text: '{text}'"
+        "You are a grammar and spelling checker. "
+        "Analyze the text, list all grammar or spelling issues, and also provide the corrected full sentence at the end. "
+        "Respond strictly in JSON format as an object like this:\n"
+        "{"
+        "\"issues\": [{\"issue\": \"string\", \"original\": \"string\", \"suggestion\": \"string\"}], "
+        "\"corrected_text\": \"string\""
+        "}\n"
+        "If there are no issues, set 'issues' as an empty array and 'corrected_text' should contain the corrected sentence.\n\n"
+        f"Text: {text}"
     )
 
-    payload = {
-        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "responseMimeType": "application/json",
-            "responseSchema": {
-                "type": "ARRAY",
-                "items": {
-                    "type": "OBJECT",
-                    "properties": {
-                        "issue": {"type": "STRING"},
-                        "original_text": {"type": "STRING"},
-                        "suggestion": {"type": "STRING"}
-                    }
-                }
-            }
-        }
-    }
+    raw = call_gemini_api(prompt)
+    if not raw:
+        return ["Error: No response from Gemini."]
 
-    corrections = call_gemini_api_with_retry(payload, is_structured_response=True)
-    feedback_messages = []
-    if corrections:
-        for correction in corrections:
-            message = (
-                f"Issue: {correction.get('issue', '')}. "
-                f"Original: '{correction.get('original_text', '')}'. "
-                f"Suggestion: '{correction.get('suggestion', '')}'"
-            )
-            feedback_messages.append(message)
-    else:
-        feedback_messages.append("No grammar or spelling errors found.")
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
+    if match:
+        try:
+            parsed = json.loads(match.group(0))
+            issues = parsed.get("issues", [])
+            corrected = parsed.get("corrected_text", "")
 
-    return feedback_messages
+            result_lines = []
+            if issues:
+                for p in issues:
+                    result_lines.append(
+                        f"Issue: {p.get('issue','')}. Original: {p.get('original','')}. Suggestion: {p.get('suggestion','')}"
+                    )
+            else:
+                result_lines.append("No grammar issues found.")
+
+            if corrected:
+                result_lines.append(f"\nCorrect sentence: {corrected}")
+
+            return result_lines
+
+        except Exception as e:
+            print("Grammar JSON parse error:", e)
+
+    return [line.strip(" -•") for line in raw.split("\n") if line.strip()] or ["No grammar issues found."]
+
+
 
 def plagiarism_check_feedback(text):
-    """Check for plagiarism using Gemini and return a percentage."""
     prompt = (
-        f"Analyze the following text for plagiarism. "
-        f"Estimate the percentage of the text that is likely plagiarized (0-100%). "
-        f"Return your answer in JSON format as: {{'percentage': <number>, 'explanation': <string>}}. "
-        f"Text: '{text}'"
+        "Estimate the plagiarism percentage (0–100%) for the text and provide one brief reason. "
+        "Respond strictly as JSON like this:\n"
+        "{\"percentage\": number, \"explanation\": \"string\"}\n\n"
+        f"Text: {text}"
     )
 
-    payload = {"contents": [{"role": "user", "parts": [{"text": prompt}]}]}
-    result = call_gemini_api_with_retry(payload)
-    if not result:
-        return {'percentage': None, 'explanation': "Unable to determine plagiarism status."}
+    raw = call_gemini_api(prompt)
+    if not raw:
+        return {"percentage": None, "explanation": "Error: No response from Gemini."}
 
-    # Try to extract JSON from Gemini's output
-    import re
-    match = re.search(r'\{.*\}', result, re.DOTALL)
+    match = re.search(r"\{.*\}", raw, re.DOTALL)
     if match:
-        json_str = match.group(0)
         try:
-            parsed = json.loads(json_str)
-            percentage = parsed.get('percentage', None)
-            explanation = parsed.get('explanation', '')
-            return {'percentage': percentage, 'explanation': explanation}
-        except Exception:
-            pass
-    # Fallback: return raw result as explanation
-    return {'percentage': None, 'explanation': result.strip()}
+            parsed = json.loads(match.group(0))
+            return {
+                "percentage": parsed.get("percentage"),
+                "explanation": parsed.get("explanation", "")
+            }
+        except Exception as e:
+            print("Plagiarism JSON parse error:", e)
 
-@app.route('/')
-def home():
-    return "Abbrevify API is running! 🚀"
+    percent_match = re.search(r"(\d{1,3})%", raw)
+    percentage = int(percent_match.group(1)) if percent_match else None
+    explanation = re.sub(r"(\d{1,3})%", "", raw).strip()
+    return {"percentage": percentage, "explanation": explanation or "No clear explanation provided."}
 
 
-@app.route('/process_text', methods=['POST', 'OPTIONS'])
+@app.route("/")
+def serve_frontend():
+    return app.send_static_file("index.html")
+
+
+@app.route("/process_text", methods=["POST", "OPTIONS"])
 def process_text():
-    if request.method == 'OPTIONS':
-        return '', 200
+    if request.method == "OPTIONS":
+        return "", 200
 
     try:
         data = request.json
-        text = data.get('text', '')
-        action = data.get('action', '')
-        mode = data.get('mode', 'sms-to-full')
+        text = data.get("text", "")
+        action = data.get("action", "")
+        mode = data.get("mode", "sms-to-full")
 
         if not text or not action:
-            return jsonify({'error': 'Missing text or action in request'}), 400
+            return jsonify({"error": "Missing text or action"}), 400
 
-        if action == 'convert':
-            if mode == 'sms-to-full':
-                processed_text = expand_abbreviations(text)
-            elif mode == 'full-to-sms':
-                processed_text = abbreviate_full_text(text)
+        if action == "convert":
+            if mode == "sms-to-full":
+                result = expand_abbreviations(text)
+            elif mode == "full-to-sms":
+                result = abbreviate_full_text(text)
             else:
-                return jsonify({'error': f'Invalid mode: {mode}'}), 400
-            return jsonify({'processed_text': processed_text})
+                return jsonify({"error": f"Invalid mode: {mode}"}), 400
+            return jsonify({"processed_text": result})
 
-        elif action == 'grammar_check':
+        elif action == "grammar_check":
             feedback = grammar_check_feedback(text)
-            return jsonify({'feedback': feedback})
-        elif action == 'plagiarism_check':
-                result = plagiarism_check_feedback(text)
-                return jsonify(result)
+            return jsonify({"feedback": feedback})
+
+        elif action == "plagiarism_check":
+            result = plagiarism_check_feedback(text)
+            return jsonify(result)
 
         else:
-            return jsonify({'error': f'Invalid action: {action}'}), 400
+            return jsonify({"error": "Invalid action"}), 400
 
     except Exception as e:
-        print(f"An error occurred: {e}")
-        return jsonify({'error': 'An internal server error occurred'}), 500
+        print("Server error:", e)
+        return jsonify({"error": "Internal server error"}), 500
 
 
-if __name__ == '__main__':
-    
-    print("Loaded API_KEY:", "FOUND " if API_KEY else "MISSING ")
+if __name__ == "__main__":
+    print("Loaded GEMINI_API_KEY:", "FOUND" if API_KEY else "MISSING")
     app.run(debug=True)
